@@ -2,7 +2,6 @@
 import axios from "axios";
 import { useState } from "react";
 import styles from "../styles/Add.module.css";
-import Image from "next/image";
 const Add = ({ currentProduct, setClose, add }) => {
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState(null);
@@ -47,21 +46,25 @@ const Add = ({ currentProduct, setClose, add }) => {
 
       await axios.post("http://localhost:3000/api/products", newProduct);
       setClose(true);
+      console.log("new", newProduct);
+      window.location.reload();
     } catch (err) {
       console.log(err);
     }
   };
   const handleUpdate = async () => {
     const data = new FormData();
-    file ? data.append("file", file) : data.append("file", currentProduct.img);
+    file && data.append("file", file);
     data.append("upload_preset", "uploads");
     try {
-      const uploadRes = await axios.post(
-        "https://api.cloudinary.com/v1_1/dcqxl1r1t/image/upload",
-        data
-      );
+      const uploadRes =
+        file &&
+        (await axios.post(
+          "https://api.cloudinary.com/v1_1/dcqxl1r1t/image/upload",
+          data
+        ));
 
-      const { url } = uploadRes.data;
+      const url = uploadRes.data.url || currentProduct.img;
       const newProduct = {
         title,
         desc,
@@ -73,6 +76,7 @@ const Add = ({ currentProduct, setClose, add }) => {
       await axios.put("http://localhost:3000/api/products", newProduct);
       console.log("new", newProduct);
       setClose(true);
+      window.location.reload();
     } catch (err) {
       console.log(err);
     }
@@ -124,7 +128,7 @@ const Add = ({ currentProduct, setClose, add }) => {
             className={styles.input}
             type="text"
             onChange={(e) => setTitle(e.target.value)}
-            defaultValue={currentProduct && currentProduct.title}
+            defaultValue={currentProduct ? currentProduct.title : null}
           />
         </div>
         <div className={styles.item}>
@@ -144,21 +148,21 @@ const Add = ({ currentProduct, setClose, add }) => {
               type="number"
               placeholder="Small"
               onChange={(e) => changePrice(e, 0)}
-              defaultValue={currentProduct.prices[0]}
+              defaultValue={currentProduct && currentProduct.prices[0]}
             />
             <input
               className={`${styles.input} ${styles.inputSm}`}
               type="number"
               placeholder="Medium"
               onChange={(e) => changePrice(e, 1)}
-              defaultValue={currentProduct.prices[1]}
+              defaultValue={currentProduct && currentProduct.prices[1]}
             />
             <input
               className={`${styles.input} ${styles.inputSm}`}
               type="number"
               placeholder="Large"
               onChange={(e) => changePrice(e, 2)}
-              defaultValue={currentProduct.prices[2]}
+              defaultValue={currentProduct && currentProduct.prices[2]}
             />
           </div>
         </div>

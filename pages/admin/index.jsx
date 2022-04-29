@@ -1,6 +1,6 @@
 import axios from "axios";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Add from "../../components/Add";
 import Button from "../../components/Button";
 import styles from "../../styles/Admin.module.css";
@@ -8,7 +8,9 @@ const Index = ({ orders, products }) => {
   const [pizzaList, setPizzaList] = useState(products);
   const [orderList, setOrderList] = useState(orders);
   const [close, setClose] = useState(true);
-  const [currentProduct, setCurrentProduct] = useState();
+  const [newPizza, setNewPizza] = useState(false);
+  const [currentProduct, setCurrentProduct] = useState(null);
+
   const status = ["preparing", "on the way", "delivered"];
   const handleDelete = async (id) => {
     try {
@@ -38,9 +40,16 @@ const Index = ({ orders, products }) => {
     document.cookie = "token= ; expires = Thu, 01 Jan 1970 00:00:00 GMT";
     history.back();
   };
+  const addNew = () => {
+    setNewPizza(!newPizza);
+    setCurrentProduct(null);
+    setClose(!close);
+  };
   return (
     <>
       <Button label="Logout" onClick={handleOnClick} />
+      <Button onClick={() => addNew()} label="Add New Pizza" />
+
       <div className={styles.container}>
         <div className={styles.item}>
           <h1 className={styles.title}>Products</h1>
@@ -126,7 +135,11 @@ const Index = ({ orders, products }) => {
         </div>
       </div>
       {!close && (
-        <Add currentProduct={currentProduct} add={false} setClose={setClose} />
+        <Add
+          currentProduct={currentProduct}
+          add={newPizza}
+          setClose={setClose}
+        />
       )}
     </>
   );
