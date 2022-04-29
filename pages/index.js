@@ -18,9 +18,9 @@ export default function Home({ pizzaList, admin }) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Featured />
-      {admin && <Button onClick={setClose(false)} label="Add New Pizza" />}
+      {admin && <Button onClick={() => setClose(!close)} label="Add New Pizza" />}
       <PizzaList pizzaList={pizzaList} />
-      {!close && <Add setClose={setClose} />}
+      {!close && <Add add setClose={setClose} />}
     </div>
   );
 }

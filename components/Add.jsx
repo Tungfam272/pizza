@@ -1,16 +1,17 @@
+/* eslint-disable @next/next/no-img-element */
+import axios from "axios";
 import { useState } from "react";
 import styles from "../styles/Add.module.css";
-import axios from "axios";
-import { useRouter } from "next/router";
-
-const Add = ({ setClose }) => {
+import Image from "next/image";
+const Add = ({ currentProduct, setClose, add }) => {
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState(null);
   const [desc, setDesc] = useState(null);
   const [prices, setPrices] = useState([]);
   const [extraOptions, setExtraOptions] = useState([]);
   const [extra, setExtra] = useState(null);
-
+  console.log("currentProduct", currentProduct);
+  console.log("file", file);
   const changePrice = (e, index) => {
     const currentPrices = prices;
     currentPrices[index] = e.target.value;
@@ -50,17 +51,72 @@ const Add = ({ setClose }) => {
       console.log(err);
     }
   };
+  const handleUpdate = async () => {
+    const data = new FormData();
+    file ? data.append("file", file) : data.append("file", currentProduct.img);
+    data.append("upload_preset", "uploads");
+    try {
+      const uploadRes = await axios.post(
+        "https://api.cloudinary.com/v1_1/dcqxl1r1t/image/upload",
+        data
+      );
 
+      const { url } = uploadRes.data;
+      const newProduct = {
+        title,
+        desc,
+        prices,
+        extraOptions,
+        img: url,
+      };
+
+      await axios.put("http://localhost:3000/api/products", newProduct);
+      console.log("new", newProduct);
+      setClose(true);
+    } catch (err) {
+      console.log(err);
+    }
+  };
   return (
     <div className={styles.container}>
       <div className={styles.wrapper}>
         <span onClick={() => setClose(true)} className={styles.close}>
           X
         </span>
-        <h1>Add a new Pizza</h1>
+        <h1>{add ? "Add a new Pizza" : "Update"}</h1>
         <div className={styles.item}>
           <label className={styles.label}>Choose an image</label>
-          <input type="file" onChange={(e) => setFile(e.target.files[0])} />
+          {!currentProduct ? (
+            <>
+              <input
+                id="img"
+                accept=".png, .jpg, .jpeg"
+                type="file"
+                onChange={(e) => setFile(e.target.files[0])}
+              />
+              <img
+                src={file && URL.createObjectURL(file)}
+                className={styles.img}
+                layout="fill"
+                alt="img"
+              />
+            </>
+          ) : (
+            <>
+              <input
+                id="img"
+                accept=".png, .jpg, .jpeg"
+                type="file"
+                onChange={(e) => setFile(e.target.files[0])}
+              />
+              <img
+                src={!file ? currentProduct.img : URL.createObjectURL(file)}
+                className={styles.img}
+                layout="fill"
+                alt="img"
+              />
+            </>
+          )}
         </div>
         <div className={styles.item}>
           <label className={styles.label}>Title</label>
@@ -68,6 +124,7 @@ const Add = ({ setClose }) => {
             className={styles.input}
             type="text"
             onChange={(e) => setTitle(e.target.value)}
+            defaultValue={currentProduct && currentProduct.title}
           />
         </div>
         <div className={styles.item}>
@@ -76,6 +133,7 @@ const Add = ({ setClose }) => {
             rows={4}
             type="text"
             onChange={(e) => setDesc(e.target.value)}
+            defaultValue={currentProduct && currentProduct.desc}
           />
         </div>
         <div className={styles.item}>
@@ -86,18 +144,21 @@ const Add = ({ setClose }) => {
               type="number"
               placeholder="Small"
               onChange={(e) => changePrice(e, 0)}
+              defaultValue={currentProduct.prices[0]}
             />
             <input
               className={`${styles.input} ${styles.inputSm}`}
               type="number"
               placeholder="Medium"
               onChange={(e) => changePrice(e, 1)}
+              defaultValue={currentProduct.prices[1]}
             />
             <input
               className={`${styles.input} ${styles.inputSm}`}
               type="number"
               placeholder="Large"
               onChange={(e) => changePrice(e, 2)}
+              defaultValue={currentProduct.prices[2]}
             />
           </div>
         </div>
@@ -123,15 +184,24 @@ const Add = ({ setClose }) => {
             </button>
           </div>
           <div className={styles.extraItems}>
-            {extraOptions.map((option) => (
-              <span key={option.text} className={styles.extraItem}>
-                {option.text}
-              </span>
-            ))}
+            {!currentProduct
+              ? extraOptions.map((option) => (
+                  <span key={option.text} className={styles.extraItem}>
+                    {option.text}
+                  </span>
+                ))
+              : currentProduct.extraOptions.map((option) => (
+                  <span key={option.text} className={styles.extraItem}>
+                    {option.text}
+                  </span>
+                ))}
           </div>
         </div>
-        <button className={styles.addButton} onClick={handleCreate}>
-          Create
+        <button
+          className={styles.addButton}
+          onClick={add ? handleCreate : handleUpdate}
+        >
+          {add ? "Create" : "Update"}
         </button>
       </div>
     </div>
